@@ -1,0 +1,66 @@
+package Module_EE_02;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.Assert.*;
+
+/**
+ * Created by Andrey on 09.06.2016.
+ */
+public class ExecutorImplTest {
+
+    private Executor<Number> numberExecutor;
+
+    @Before
+    public void setUp() throws Exception {
+        numberExecutor = new ExecutorImpl<>();
+    }
+
+    @Test
+    public void test1() throws Exception {
+        List<Task<Integer>> taskList = new ArrayList<>();
+        taskList.add(new LongTask<>(14552));
+        taskList.add(new LongTask<>(11));
+        taskList.add(new LongTask<>(4444));
+        test(taskList);
+    }
+
+
+    @Test(expected = Exception.class)
+    public void testException1() throws Exception {
+        numberExecutor.execute();
+        System.out.println("Call addTask() after execute()");
+        numberExecutor.addTask(new LongTask<>(1));
+    }
+
+    @Test(expected = Exception.class)
+    public void testException2() throws Exception {
+        System.out.println("Call getResults() before execute()");
+        numberExecutor.getInvalidResults();
+    }
+
+    public void test(List<Task<Integer>> intTasks) throws Exception {
+
+        for (Task<Integer> intTask : intTasks) {
+            numberExecutor.addTask(intTask);
+        }
+
+        Validator validator = new NumberValidator();
+        numberExecutor.addTask(new LongTask(1L), validator);
+        numberExecutor.addTask(new LongTask(-1), validator);
+        numberExecutor.addTask(new LongTask(-2d), validator);
+        numberExecutor.addTask(new LongTask(-55d), validator);
+
+        numberExecutor.execute();
+
+        System.out.println("Valid results:");
+        numberExecutor.getValidResults();
+        System.out.println("Invalid results:");
+        numberExecutor.getInvalidResults();
+    }
+
+}
