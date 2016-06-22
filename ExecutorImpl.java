@@ -1,5 +1,6 @@
 package Module_EE_02;
 
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,61 +10,69 @@ import java.util.List;
  */
 public class ExecutorImpl<T> implements Executor<T> {
 
-    private boolean isExecute = false;
-    private List<T> validResults = new ArrayList<>();
-    private List<T> invalidResults = new ArrayList<>();
-    private List<Task<? extends T>> tasks = new ArrayList<>();
+    private List<T> validResult = new ArrayList<>();
+    private List<T> invalidResult = new ArrayList<>();
+    private List<TaskAndValidator<T>> tasks = new ArrayList<>();
 
-    // Добавить таск на выполнение. Результат таска будет доступен через метод getValidResults().
-    // Бросает Эксепшн если уже был вызван метод execute()
+    private static final Validator<Object> DEFAULT_VALIDATOR = value -> true;
+    private boolean executed = false;
+
+
+    @Override
     public void addTask(Task<? extends T> task) throws Exception {
-        if(isExecute){
-            throw new Exception();
-        }
-        tasks.add(task);
-        validResults.add(task.getResult());
+        addTask(task, DEFAULT_VALIDATOR);
     }
 
-    // Добавить таск на выполнение и валидатор результата. Результат таска будет записан в ValidResults
-    // если validator.isValid вернет true для этого результата
-    // Результат таска будет записан в InvalidResults если validator.isValid вернет false для этого результата
-    // Бросает Эксепшн если уже был вызван метод execute()
-    public void addTask(Task<? extends T> task, Validator<? super T> validator) throws Exception{
-        if(isExecute){
-            throw new Exception();
-        }
-        tasks.add(task);
-        if (validator.isValid(task.getResult())) {
-            validResults.add(task.getResult());
-        } else
-            invalidResults.add(task.getResult());
+    @Override
+    public void addTask(Task<? extends T> task, Validator<? super T> validator) throws Exception {
+        checkNotExecuted();
+        tasks.add(new TaskAndValidator<T>(task, validator));
     }
 
-    // Выполнить все добавленые таски
+
+
+    @Override
     public void execute() {
-
-        for(Task task: tasks){
+        checkNotExecuted();
+        for(TaskAndValidator<T> taskAndValidator : tasks){
+            Task<? extends T> task = taskAndValidator.task;
             task.execute();
-        }
+            if(taskAndValidator.validator.isValid(task.getResult())) {
+                validResult.add(task.getResult());
+            }else{
+                invalidResult.add(task.getResult());
+            }
 
-        isExecute = true;
+        }
+        executed = true;
     }
 
-    // Получить валидные результаты. Бросает Эксепшн если не был вызван метод execute()
-    public List<T> getValidResults() throws Exception{
-        if (!isExecute){
-            throw new Exception();
-        }
-
-        return validResults;
+    @Override
+    public List<T> getValidResults() throws Exception {
+        checkExecuted();
+        return validResult;
     }
 
-    // Получить невалидные результаты. Бросает Эксепшн если не был вызван метод execute()
-    public List<T> getInvalidResults() throws Exception{
-        if (!isExecute){
-            throw new Exception();
-        }
+    @Override
+    public List<T> getInvalidResults() throws Exception {
+        checkExecuted();
+        return invalidResult;
+    }
 
-        return invalidResults;
+    private static class TaskAndValidator<T>{
+        private Task<? extends T> task;
+        private Validator<? super T> validator;
+
+        public TaskAndValidator(Task<? extends T> task, Validator<? super T> validator) {
+            this.task = task;
+            this.validator = validator;
+        }
+    }
+
+    public void checkExecuted(){
+        if(!executed){throw new IllegalStateException("Executor already executed");}
+    }
+    public void checkNotExecuted(){
+        if(executed){throw new IllegalStateException("Executor already executed");}
     }
 }

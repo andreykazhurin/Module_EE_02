@@ -3,10 +3,10 @@ package Module_EE_02;
 /**
  * Created by Andrey on 03.06.2016.
  */
-public class LongTask<T extends Number> implements Task<T> {
-    private T result;
+public class LongTask implements Task<Long> {
+    private Long result;
 
-    public LongTask(T number){
+    public LongTask(Long number){
         result = number;
     }
 
@@ -15,7 +15,7 @@ public class LongTask<T extends Number> implements Task<T> {
     }
 
 
-    public T getResult() {
+    public Long getResult() {
         return result;
     }
 }
