@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
  */
 public class ExecutorImplTest {
 
-    private Executor<Number> numberExecutor;
+   private Executor<Number> numberExecutor;
 
     @Before
     public void setUp() throws Exception {
@@ -22,10 +22,10 @@ public class ExecutorImplTest {
 
     @Test
     public void test1() throws Exception {
-        List<Task<Integer>> taskList = new ArrayList<>();
-        taskList.add(new LongTask<>(14552));
-        taskList.add(new LongTask<>(11));
-        taskList.add(new LongTask<>(4444));
+        List<Task<? extends Number>> taskList = new ArrayList<>();
+        taskList.add(new LongTask(14552L));
+        taskList.add(new LongTask(11L));
+        taskList.add(new LongTask(4444L));
         test(taskList);
     }
 
@@ -34,7 +34,7 @@ public class ExecutorImplTest {
     public void testException1() throws Exception {
         numberExecutor.execute();
         System.out.println("Call addTask() after execute()");
-        numberExecutor.addTask(new LongTask<>(1));
+        numberExecutor.addTask(new LongTask(1L));
     }
 
     @Test(expected = Exception.class)
@@ -43,17 +43,17 @@ public class ExecutorImplTest {
         numberExecutor.getInvalidResults();
     }
 
-    public void test(List<Task<Integer>> intTasks) throws Exception {
+    public void test(List<Task<? extends Number>> intTasks) throws Exception {
 
-        for (Task<Integer> intTask : intTasks) {
+        for (Task<? extends Number> intTask : intTasks) {
             numberExecutor.addTask(intTask);
         }
 
         Validator validator = new NumberValidator();
         numberExecutor.addTask(new LongTask(1L), validator);
-        numberExecutor.addTask(new LongTask(-1), validator);
-        numberExecutor.addTask(new LongTask(-2d), validator);
-        numberExecutor.addTask(new LongTask(-55d), validator);
+        numberExecutor.addTask(new LongTask(-1L), validator);
+        numberExecutor.addTask(new LongTask(-2l), validator);
+        numberExecutor.addTask(new LongTask(-55l), validator);
 
         numberExecutor.execute();
 
